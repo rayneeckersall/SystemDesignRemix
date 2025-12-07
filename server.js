@@ -4,6 +4,11 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
+const searchRoutes = require('./routes/searchRoutes');
+const bookRoutes = require('./routes/bookRoutes');
+const externalBookRoutes = require('./routes/externalBookRoutes'); // ⬅ add this
+
+
 
 const app = express();
 
@@ -20,6 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API routes
 app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/books', require('./routes/bookRoutes'));
+app.use('/api/external-books', externalBookRoutes);
 
 // fallback route (optional): send index.html if root is hit
 app.get('/', (req, res) => {

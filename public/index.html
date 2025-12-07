@@ -39,6 +39,44 @@
         />
         <button type="submit">Search</button>
       </form>
+
+      <!-- Filters row -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <label for="genre-filter">Genre</label>
+    <select id="genre-filter">
+      <option value="any">Any</option>
+      <option value="fantasy">Fantasy</option>
+      <option value="romance">Romance</option>
+      <option value="mystery">Mystery</option>
+      <option value="science_fiction">Sci-Fi</option>
+      <option value="young_adult">Young Adult</option>
+      <option value="nonfiction">Non-fiction</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="rating-filter">Rating</label>
+    <select id="rating-filter">
+      <option value="any">Any</option>
+      <option value="3">3★+</option>
+      <option value="3.5">3.5★+</option>
+      <option value="4">4★+</option>
+      <option value="4.5">4.5★+</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="length-filter">Length</label>
+    <select id="length-filter">
+      <option value="any">Any</option>
+      <option value="short">Short (&le; 250 pages)</option>
+      <option value="medium">Medium (251–400)</option>
+      <option value="long">Long (&gt; 400)</option>
+    </select>
+  </div>
+</div>
+
     </section>
 
    <section class="recommended-section">
