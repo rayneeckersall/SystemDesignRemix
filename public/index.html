@@ -3,28 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <title>Book Tracker – Search</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>Book Tracker</h1>
-    <nav>
-      <a href="index.html">Search</a>
-      <a href="library.html">My Library</a>
+  <header class="app-header">
+    <div class="header-brand">
+      <h1>Book Tracker</h1>
+    </div>
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link active">Search</a>
+      <a href="library.html" class="nav-link">My Library</a>
     </nav>
   </header>
 
-  <main>
-    <section class="search-section">
-      <form id="search-form">
+  <main class="home-layout">
+    <section class="hero-copy">
+      <p class="eyebrow">Personal reading companion</p>
+      <h2 class="hero-title">Keep your entire reading life in one cozy place.</h2>
+      <p class="hero-subtitle">
+        Search any book using Big Book API, then add it to your TBR,
+        Read, or DNF shelves. No social feed, no pressure – just your
+        own private library.
+      </p>
+      <ul class="hero-bullets">
+        <li>Track what you&apos;ve read and what&apos;s next</li>
+        <li>Separate shelves for TBR, Read &amp; DNF</li>
+        <li>Ratings and notes that stay just with you</li>
+      </ul>
+    </section>
+
+    <section class="hero-search">
+      <h3 class="panel-title">Search for a book</h3>
+
+      <form id="search-form" class="search-form">
         <input
           id="search-input"
           type="text"
-          placeholder="Search for a book..."
+          placeholder="Try &quot;cozy fantasy&quot; or &quot;Emily Henry&quot;..."
           required
         />
         <button type="submit">Search</button>
       </form>
+
       <div id="results"></div>
     </section>
   </main>
@@ -32,4 +61,3 @@
   <script src="search.js"></script>
 </body>
 </html>
-

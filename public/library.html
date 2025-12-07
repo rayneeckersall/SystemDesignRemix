@@ -3,28 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <title>My Library</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>My Library</h1>
-    <nav>
-      <a href="index.html">Search</a>
-      <a href="library.html">My Library</a>
+  <header class="app-header">
+    <div class="header-brand">
+      <h1>Book Tracker</h1>
+    </div>
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link">Search</a>
+      <a href="library.html" class="nav-link active">My Library</a>
     </nav>
   </header>
 
-  <main>
-    <div class="tabs">
-      <button class="tab active" data-status="TBR">TBR</button>
-      <button class="tab" data-status="READ">Read</button>
-      <button class="tab" data-status="DNF">DNF</button>
-    </div>
+  <main class="library-layout">
+    <!-- Left side: bookshelf tabs -->
+    <section class="shelf-panel">
+      <p class="eyebrow">Shelves</p>
+      <h2 class="hero-title small">Choose a shelf to view your books.</h2>
 
-    <section id="shelf"></section>
+      <div class="bookshelf">
+        <button class="shelf-book active" data-status="TBR">
+          <span class="shelf-label">TBR</span>
+        </button>
+        <button class="shelf-book" data-status="READ">
+          <span class="shelf-label">Read</span>
+        </button>
+        <button class="shelf-book" data-status="DNF">
+          <span class="shelf-label">DNF</span>
+        </button>
+
+        <div class="shelf-plank"></div>
+      </div>
+
+      <p class="shelf-help">
+        Tap a spine to lift it off the shelf and load the books in that
+        section.
+      </p>
+    </section>
+
+    <!-- Right side: books in the selected shelf -->
+    <section class="shelf-content">
+      <h3 id="shelf-title" class="panel-title">To Be Read</h3>
+      <div id="shelf"></div>
+    </section>
   </main>
 
   <script src="library.js"></script>
 </body>
 </html>
-
