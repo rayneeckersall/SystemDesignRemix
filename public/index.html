@@ -1,1 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Book Tracker – Search</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Book Tracker</h1>
+    <nav>
+      <a href="index.html">Search</a>
+      <a href="library.html">My Library</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="search-section">
+      <form id="search-form">
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search for a book..."
+          required
+        />
+        <button type="submit">Search</button>
+      </form>
+      <div id="results"></div>
+    </section>
+  </main>
+
+  <script src="search.js"></script>
+</body>
+</html>
 

@@ -1,1 +1,130 @@
+:root {
+  --bg: #f8f5ff;
+  --border: #ddd;
+  --accent: #5339ff;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  background: var(--bg);
+}
+
+header {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+}
+
+nav a {
+  margin-left: 1rem;
+  text-decoration: none;
+  color: #333;
+}
+
+nav a:hover {
+  color: var(--accent);
+}
+
+main {
+  padding: 1.5rem 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.search-section {
+  max-width: 600px;
+}
+
+#search-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+#search-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+button {
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+  font-size: 0.9rem;
+}
+
+button.secondary {
+  background: #eee;
+  color: #333;
+}
+
+button.danger {
+  background: #e45757;
+  color: white;
+}
+
+#results,
+#shelf {
+  margin-top: 1rem;
+}
+
+.book-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.8rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.book-card img {
+  width: 70px;
+  height: 105px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.book-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.book-card p {
+  margin: 0.1rem 0;
+  font-size: 0.85rem;
+}
+
+.book-card .actions {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  background: #eee;
+  color: #333;
+}
+
+.tab.active {
+  background: var(--accent);
+  color: white;
+}
 
