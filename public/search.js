@@ -1,55 +1,67 @@
+// public/search.js
+
+// --- DOM references ---
 const form = document.getElementById("search-form");
 const input = document.getElementById("search-input");
 const resultsDiv = document.getElementById("results");
-const genreSelect = document.getElementById('genre-filter');
-const ratingSelect = document.getElementById('rating-filter');
-const lengthSelect = document.getElementById('length-filter');
+const genreSelect = document.getElementById("genre-filter");
+const ratingSelect = document.getElementById("rating-filter");
+const lengthSelect = document.getElementById("length-filter");
 
-const detailsCache = {}; // cache book info for cards
+// cache for book detail responses
+const detailsCache = {};
 
+// --- Event wiring ---
 
-form.addEventListener('submit', async (e) => {
+// normal search submit
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   await performSearch();
 });
 
-window.addEventListener('DOMContentLoaded', () => {
-  // default recommended search
-  input.value = 'popular fiction books';
+// default recommended search on first load
+window.addEventListener("DOMContentLoaded", () => {
   performSearch();
 });
 
-// re-run search when filters change
+// re-run search when any filter changes
 [genreSelect, ratingSelect, lengthSelect].forEach((el) => {
-  el.addEventListener('change', () => {
+  el.addEventListener("change", () => {
     performSearch();
   });
 });
 
+// close all "+" menus when clicking anywhere else
+document.addEventListener("click", () => {
+  document
+    .querySelectorAll(".book-menu")
+    .forEach((menu) => menu.classList.add("hidden"));
+});
+
+// --- Search + render ---
 
 async function performSearch() {
-  const baseQuery = input.value.trim() || 'books';
-
+  const baseQuery = input.value.trim() || "books";
   const params = new URLSearchParams({ q: baseQuery });
 
   const genre = genreSelect.value;
   const rating = ratingSelect.value;
   const length = lengthSelect.value;
 
-  if (genre && genre !== 'any') params.set('genre', genre);
-  if (rating && rating !== 'any') params.set('rating', rating);
-  if (length && length !== 'any') params.set('length', length);
+  if (genre && genre !== "any") params.set("genre", genre);
+  if (rating && rating !== "any") params.set("rating", rating);
+  if (length && length !== "any") params.set("length", length);
 
-  resultsDiv.textContent = 'Loading...';
+  resultsDiv.textContent = "Loading...";
 
   try {
     const res = await fetch(`/api/search?${params.toString()}`);
     const books = await res.json();
 
-    resultsDiv.innerHTML = '';
+    resultsDiv.innerHTML = "";
 
     if (!books.length) {
-      resultsDiv.textContent = 'No results.';
+      resultsDiv.textContent = "No results.";
       return;
     }
 
@@ -57,23 +69,247 @@ async function performSearch() {
       renderBookTile(book);
     });
   } catch (err) {
-    console.error(err);
-    resultsDiv.textContent = 'Error loading search results.';
+    console.error("Error in performSearch:", err);
+    resultsDiv.textContent = "Error loading search results.";
   }
 }
 
+// --- Tile + menus ---
 
-// Close menus & info cards when clicking anywhere else on the page
-document.addEventListener("click", () => {
+function renderBookTile(book) {
+  const tile = document.createElement("div");
+  tile.className = "book-tile";
+
+  // cover
+  const coverWrapper = document.createElement("div");
+  coverWrapper.className = "book-cover-wrapper";
+
+  const img = document.createElement("img");
+  img.src = book.coverImageUrl || "";
+  img.alt = book.title;
+
+  // "+" button
+  const plus = document.createElement("button");
+  plus.className = "book-plus";
+  plus.type = "button";
+  plus.textContent = "+";
+  plus.setAttribute("aria-label", "Add to shelf");
+
+  // menu under "+" (TBR / READ / DNF)
+  const menu = document.createElement("div");
+  menu.className = "book-menu hidden";
+
+  ["TBR", "READ", "DNF"].forEach((status) => {
+    const btn = document.createElement("button");
+    btn.textContent =
+      status === "TBR"
+        ? "Add to TBR"
+        : status === "READ"
+        ? "Mark as Read"
+        : "Add to DNF";
+
+    btn.addEventListener("click", () => {
+      addBookToShelf(book.bigBookId, status);
+      menu.classList.add("hidden");
+    });
+
+    menu.appendChild(btn);
+  });
+
+  plus.addEventListener("click", (e) => {
+    e.stopPropagation();
+    // close any other menus + info overlays
+    document
+      .querySelectorAll(".book-menu")
+      .forEach((m) => m !== menu && m.classList.add("hidden"));
+    document
+      .querySelectorAll(".book-info-overlay")
+      .forEach((o) => o.remove());
+
+    menu.classList.toggle("hidden");
+  });
+
+  coverWrapper.appendChild(img);
+  coverWrapper.appendChild(plus);
+  coverWrapper.appendChild(menu);
+
+  // title (truncated with ellipsis via CSS)
+  const titleEl = document.createElement("p");
+  titleEl.className = "book-title";
+  titleEl.textContent = book.title;
+
+  // clicking cover OR title opens info modal
+  const openInfo = (e) => {
+    e.stopPropagation();
+    console.log("📖 openInfo clicked for:", book.title);
+    showInfoCard(book);
+  };
+
+  coverWrapper.addEventListener("click", openInfo);
+  titleEl.addEventListener("click", openInfo);
+
+  tile.appendChild(coverWrapper);
+  tile.appendChild(titleEl);
+
+  resultsDiv.appendChild(tile);
+}
+
+// --- Info overlay (full-screen modal) ---
+
+async function showInfoCard(book) {
+  // close menus + any existing overlays
   document
     .querySelectorAll(".book-menu")
-    .forEach((menu) => menu.classList.add("hidden"));
-
+    .forEach((m) => m.classList.add("hidden"));
   document
-    .querySelectorAll(".book-info-card")
-    .forEach((card) => card.remove());
-});
+    .querySelectorAll(".book-info-overlay")
+    .forEach((o) => o.remove());
 
+  let details = detailsCache[book.bigBookId];
+  let usedFallback = false;
+
+  if (!details) {
+    try {
+      console.log("🔎 fetching details for", book.bigBookId);
+      const res = await fetch(`/api/external-books/${book.bigBookId}`);
+
+      if (!res.ok) {
+        throw new Error(`Status ${res.status}`);
+      }
+
+      details = await res.json();
+      detailsCache[book.bigBookId] = details;
+    } catch (err) {
+      console.error("Error in showInfoCard fetch, using fallback:", err);
+
+      // fallback to basic info from search results
+      details = {
+        title: book.title,
+        authors: book.authors || [],
+        averageRating: book.averageRating ?? null,
+        numberOfPages: null,
+        description: "",
+        image: book.coverImageUrl || "",
+      };
+      usedFallback = true;
+    }
+  } else {
+    console.log("📚 using cached details for", book.bigBookId);
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "book-info-overlay";
+
+  const card = document.createElement("div");
+  card.className = "book-info-card";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "card-close";
+  closeBtn.type = "button";
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", () => overlay.remove());
+
+  // --- main content layout (cover + text) ---
+  const main = document.createElement("div");
+  main.className = "book-info-main";
+
+  // cover image
+  const imageUrl = details.image || book.coverImageUrl || "";
+  if (imageUrl) {
+    const cover = document.createElement("img");
+    cover.className = "card-cover";
+    cover.src = imageUrl;
+    cover.alt = details.title || book.title;
+    main.appendChild(cover);
+  }
+
+  const textWrap = document.createElement("div");
+  textWrap.className = "card-text";
+
+  const title = document.createElement("h4");
+  title.textContent = details.title || book.title;
+
+  const authors = document.createElement("p");
+  authors.className = "card-meta";
+  authors.textContent =
+    (details.authors && details.authors.length
+      ? details.authors.join(", ")
+      : book.authors && book.authors.length
+      ? book.authors.join(", ")
+      : "Unknown author");
+
+  const rating = document.createElement("p");
+  rating.className = "card-meta";
+  const avg =
+    details.averageRating != null
+      ? details.averageRating
+      : book.averageRating;
+  rating.textContent =
+    avg != null ? `Rating: ${(avg * 5).toFixed(1)}★` : "Rating: N/A";
+
+  const pages = document.createElement("p");
+  pages.className = "card-meta";
+  if (details.numberOfPages) {
+    pages.textContent = `Pages: ${details.numberOfPages}`;
+  }
+
+  const desc = document.createElement("p");
+  desc.className = "card-desc";
+  if (usedFallback) {
+    desc.textContent = "More details are not available for this book.";
+  } else if (details.description) {
+    const trimmed =
+      details.description.length > 260
+        ? details.description.slice(0, 260) + "…"
+        : details.description;
+    desc.textContent = trimmed;
+  } else {
+    desc.textContent = "No description available.";
+  }
+
+  textWrap.appendChild(title);
+  textWrap.appendChild(authors);
+  textWrap.appendChild(rating);
+  if (pages.textContent) textWrap.appendChild(pages);
+  textWrap.appendChild(desc);
+
+  main.appendChild(textWrap);
+
+  // --- actions row ---
+  const actions = document.createElement("div");
+  actions.className = "card-actions";
+
+  const makeActionBtn = (status, label) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = label;
+    btn.className = "card-action-btn";
+    btn.addEventListener("click", async () => {
+      await addBookToShelf(book.bigBookId, status);
+      overlay.remove();
+    });
+    return btn;
+  };
+
+  actions.appendChild(makeActionBtn("TBR", "Add to TBR"));
+  actions.appendChild(makeActionBtn("READ", "Mark as Read"));
+  actions.appendChild(makeActionBtn("DNF", "Add to DNF"));
+
+  card.appendChild(closeBtn);
+  card.appendChild(main);
+  card.appendChild(actions);
+
+  overlay.appendChild(card);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  document.body.appendChild(overlay);
+}
+
+
+// --- Add to shelf ---
 
 async function addBookToShelf(bigBookId, status) {
   try {
@@ -84,158 +320,7 @@ async function addBookToShelf(bigBookId, status) {
     });
     alert(`Added to ${status}`);
   } catch (err) {
-    console.error(err);
+    console.error("Error in addBookToShelf:", err);
     alert("Error adding book.");
   }
 }
-function renderBookTile(book) {
-  const tile = document.createElement('div');
-  tile.className = 'book-tile';
-
-  const coverWrapper = document.createElement('div');
-  coverWrapper.className = 'book-cover-wrapper';
-
-  const img = document.createElement('img');
-  img.src = book.coverImageUrl || '';
-  img.alt = book.title;
-
-  // "+" button and menu (unchanged from before)
-  const plus = document.createElement('button');
-  plus.className = 'book-plus';
-  plus.type = 'button';
-  plus.textContent = '+';
-  plus.setAttribute('aria-label', 'Add to shelf');
-
-  const menu = document.createElement('div');
-  menu.className = 'book-menu hidden';
-
-  ['TBR', 'READ', 'DNF'].forEach((status) => {
-    const btn = document.createElement('button');
-    btn.textContent =
-      status === 'TBR'
-        ? 'Add to TBR'
-        : status === 'READ'
-        ? 'Mark as Read'
-        : 'Add to DNF';
-
-    btn.addEventListener('click', () => {
-      addBookToShelf(book.bigBookId, status);
-      menu.classList.add('hidden');
-    });
-
-    menu.appendChild(btn);
-  });
-
-  plus.addEventListener('click', (e) => {
-    e.stopPropagation();
-    document
-      .querySelectorAll('.book-menu')
-      .forEach((m) => m !== menu && m.classList.add('hidden'));
-    document
-      .querySelectorAll('.book-info-card')
-      .forEach((c) => c.remove());
-
-    menu.classList.toggle('hidden');
-  });
-
-  coverWrapper.appendChild(img);
-  coverWrapper.appendChild(plus);
-  coverWrapper.appendChild(menu);
-
-  const titleEl = document.createElement('p');
-  titleEl.className = 'book-title';
-  titleEl.textContent = book.title;
-
-  // Clicking cover OR title opens info card
-  const openInfo = (e) => {
-    e.stopPropagation();
-    showInfoCard(book, tile);
-  };
-
-  coverWrapper.addEventListener('click', openInfo);
-  titleEl.addEventListener('click', openInfo);
-
-  tile.appendChild(coverWrapper);
-  tile.appendChild(titleEl);
-
-  resultsDiv.appendChild(tile);
-}
-async function showInfoCard(book, tile) {
-  // close any other cards/menus
-  document.querySelectorAll('.book-info-card').forEach((c) => c.remove());
-  document
-    .querySelectorAll('.book-menu')
-    .forEach((m) => m.classList.add('hidden'));
-
-  let details = detailsCache[book.bigBookId];
-
-  if (!details) {
-    try {
-      const res = await fetch(`/api/external-books/${book.bigBookId}`);
-      details = await res.json();
-      detailsCache[book.bigBookId] = details;
-    } catch (err) {
-      console.error(err);
-      return;
-    }
-  }
-
-  const card = document.createElement('div');
-  card.className = 'book-info-card';
-
-  const title = document.createElement('h4');
-  title.textContent = details.title || book.title;
-
-  const authors = document.createElement('p');
-  authors.className = 'card-meta';
-  authors.textContent =
-    (details.authors && details.authors.join(', ')) ||
-    (book.authors && book.authors.join(', ')) ||
-    'Unknown author';
-
-  const rating = document.createElement('p');
-  rating.className = 'card-meta';
-  const avg =
-    details.averageRating != null
-      ? details.averageRating
-      : book.averageRating;
-  rating.textContent =
-    avg != null ? `Rating: ${(avg * 5).toFixed(1)}★` : 'Rating: N/A';
-
-  const pages = document.createElement('p');
-  pages.className = 'card-meta';
-  if (details.numberOfPages) {
-    pages.textContent = `Pages: ${details.numberOfPages}`;
-  } else {
-    pages.textContent = '';
-  }
-
-  const desc = document.createElement('p');
-  desc.className = 'card-desc';
-  if (details.description) {
-    const trimmed =
-      details.description.length > 260
-        ? details.description.slice(0, 260) + '…'
-        : details.description;
-    desc.textContent = trimmed;
-  } else {
-    desc.textContent = 'No description available.';
-  }
-
-  card.appendChild(title);
-  card.appendChild(authors);
-  card.appendChild(rating);
-  if (pages.textContent) card.appendChild(pages);
-  card.appendChild(desc);
-
-  tile.appendChild(card);
-}
-
-document.addEventListener('click', () => {
-  document
-    .querySelectorAll('.book-menu')
-    .forEach((menu) => menu.classList.add('hidden'));
-  document
-    .querySelectorAll('.book-info-card')
-    .forEach((c) => c.remove());
-});

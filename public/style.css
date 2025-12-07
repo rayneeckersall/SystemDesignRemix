@@ -191,6 +191,108 @@ main {
   border-color: #5f3bff;
 }
 
+
+
+/* Fullscreen overlay for book details */
+.book-info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 5, 40, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999; /* on top of everything */
+}
+
+/* Card inside the overlay */
+.book-info-card {
+  background: #ffffff;
+  color: #15121f;
+  border-radius: 22px;
+  padding: 1.4rem 1.6rem 1.3rem;
+  width: min(540px, 94%);
+  max-height: 72vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(12, 4, 45, 0.7);
+  position: relative;
+}
+
+/* layout inside the card: cover + text */
+.book-info-main {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+}
+
+.card-cover {
+  width: 110px;
+  height: 165px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #f0ecff;
+  flex-shrink: 0;
+  box-shadow: 0 12px 22px rgba(36, 25, 86, 0.35);
+}
+
+.card-text h4 {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+}
+
+.card-meta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #6b6689;
+}
+
+.card-desc {
+  margin-top: 0.7rem;
+  font-size: 0.86rem;
+  color: #403a60;
+  line-height: 1.45;
+}
+
+.card-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.8rem;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #8a84b0;
+}
+
+/* actions row */
+.card-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.card-action-btn {
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: #ebe7ff;
+  color: #5f3bff;
+  box-shadow: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.card-action-btn:hover {
+  transform: translateY(-1px);
+    background: #5f3bff;
+      color: white;
+  box-shadow: 0 6px 14px rgba(94, 59, 255, 0.25);
+}
+
+
 /* --- keep books consistent-sized, from earlier step --- */
 
 .book-tile {
@@ -232,9 +334,6 @@ main {
   cursor: pointer;
 }
 
-
-
-
 .recommended-section {
   width: 100%;
   max-width: 960px;
@@ -274,38 +373,6 @@ main {
     inset 0 0 0 1px rgba(255, 255, 255, 0.4);
   z-index: -1;
 }
-
-.book-info-card {
-  position: absolute;
-  left: 50%;
-  bottom: 250px;
-  transform: translateX(-50%);
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 0.75rem 0.9rem;
-  box-shadow: 0 18px 40px rgba(22, 12, 65, 0.45);
-  max-width: 260px;
-  z-index: 25;
-}
-
-.book-info-card h4 {
-  margin: 0 0 0.25rem;
-  font-size: 0.95rem;
-}
-
-.card-meta {
-  margin: 0;
-  font-size: 0.78rem;
-  color: #6b6689;
-}
-
-.card-desc {
-  margin-top: 0.55rem;
-  font-size: 0.8rem;
-  color: #403a60;
-}
-
-/* close card when clicking elsewhere */
 
 /* ----- Book tiles on the homepage shelf ----- */
 
