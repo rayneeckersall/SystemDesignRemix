@@ -33,6 +33,7 @@ async function performSearch(query) {
       const tile = document.createElement("div");
       tile.className = "book-tile";
 
+      // Cover
       const coverWrapper = document.createElement("div");
       coverWrapper.className = "book-cover-wrapper";
 
@@ -47,7 +48,7 @@ async function performSearch(query) {
       plus.textContent = "+";
       plus.setAttribute("aria-label", "Add to shelf");
 
-      // popup menu
+      // popup menu (TBR / READ / DNF)
       const menu = document.createElement("div");
       menu.className = "book-menu hidden";
 
@@ -68,13 +69,15 @@ async function performSearch(query) {
         menu.appendChild(btn);
       });
 
-      // toggle menu on plus click
       plus.addEventListener("click", (e) => {
         e.stopPropagation();
-        // close any other open menus first
+        // close all other menus first
         document
           .querySelectorAll(".book-menu")
           .forEach((m) => m !== menu && m.classList.add("hidden"));
+        document
+          .querySelectorAll(".title-popover")
+          .forEach((p) => p.classList.remove("visible"));
 
         menu.classList.toggle("hidden");
       });
@@ -83,12 +86,31 @@ async function performSearch(query) {
       coverWrapper.appendChild(plus);
       coverWrapper.appendChild(menu);
 
+      // Title (truncated) + popover
       const titleEl = document.createElement("p");
       titleEl.className = "book-title";
       titleEl.textContent = book.title;
 
+      const popover = document.createElement("div");
+      popover.className = "title-popover";
+      popover.textContent = book.title;
+
+      titleEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // close other popovers & menus
+        document
+          .querySelectorAll(".title-popover")
+          .forEach((p) => p !== popover && p.classList.remove("visible"));
+        document
+          .querySelectorAll(".book-menu")
+          .forEach((m) => m.classList.add("hidden"));
+
+        popover.classList.toggle("visible");
+      });
+
       tile.appendChild(coverWrapper);
       tile.appendChild(titleEl);
+      tile.appendChild(popover);
 
       resultsDiv.appendChild(tile);
     });
@@ -97,6 +119,17 @@ async function performSearch(query) {
     resultsDiv.textContent = "Error loading search results.";
   }
 }
+
+// Close menus & popovers when clicking anywhere else
+document.addEventListener("click", () => {
+  document
+    .querySelectorAll(".book-menu")
+    .forEach((menu) => menu.classList.add("hidden"));
+  document
+    .querySelectorAll(".title-popover")
+    .forEach((p) => p.classList.remove("visible"));
+});
+
 
 // close menus if you click anywhere else on the page
 document.addEventListener("click", () => {

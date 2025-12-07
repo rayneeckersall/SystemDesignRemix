@@ -201,21 +201,23 @@ main {
 /* ----- Book tiles on the homepage shelf ----- */
 
 .book-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
+  width: 150px;           /* fixed width so titles can't stretch layout */
+  flex-shrink: 0;
 }
 
 .book-cover-wrapper {
   position: relative;
-  width: 120px;
-  height: 180px;
-  border-radius: 10px;
+  width: 150px;           /* bigger cover */
+  height: 220px;          /* bigger cover */
+  border-radius: 12px;
   overflow: hidden;
   background: #f0ecff;
   box-shadow: 0 10px 22px rgba(36, 25, 86, 0.22);
-  flex-shrink: 0;
 }
 
 .book-cover-wrapper img {
@@ -229,9 +231,35 @@ main {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-main);
-  max-width: 120px;
+  max-width: 150px;
   text-align: center;
+  white-space: nowrap;        /* prevent wrapping */
+  overflow: hidden;           /* hide overflow */
+  text-overflow: ellipsis;    /* show … */
+  cursor: pointer;            /* hint that it's clickable */
 }
+
+/* Full title popover (shows on click, doesn't affect layout) */
+.title-popover {
+  position: absolute;
+  left: 50%;
+  bottom: 245px;  /* a bit above the cover */
+  transform: translateX(-50%);
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 0.4rem 0.6rem;
+  box-shadow: 0 14px 30px rgba(22, 12, 65, 0.35);
+  font-size: 0.82rem;
+  max-width: 220px;
+  text-align: center;
+  z-index: 20;
+  display: none;
+}
+
+.title-popover.visible {
+  display: block;
+}
+
 
 /* "+" button on the bottom-right of each cover */
 
