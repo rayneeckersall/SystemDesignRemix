@@ -15,47 +15,41 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<body>
   <header class="app-header">
     <div class="header-brand">
-      <h1>Book Tracker</h1>
+    <a href="index.html" class="brand-link">Book Tracker</a>
     </div>
     <nav class="header-nav">
-      <a href="index.html" class="nav-link active">Search</a>
-      <a href="library.html" class="nav-link">My Library</a>
+      <a href="library.html" class="nav-link active">My Library</a>
     </nav>
   </header>
 
+
   <main class="home-layout">
-    <section class="hero-copy">
-      <p class="eyebrow">Personal reading companion</p>
-      <h2 class="hero-title">Keep your entire reading life in one cozy place.</h2>
-      <p class="hero-subtitle">
-        Search any book using Big Book API, then add it to your TBR,
-        Read, or DNF shelves. No social feed, no pressure – just your
-        own private library.
-      </p>
-      <ul class="hero-bullets">
-        <li>Track what you&apos;ve read and what&apos;s next</li>
-        <li>Separate shelves for TBR, Read &amp; DNF</li>
-        <li>Ratings and notes that stay just with you</li>
-      </ul>
-    </section>
+    <section class="home-hero">
+      <h2 class="home-title">Find a Book to Add to Your Shelves</h2>
 
-    <section class="hero-search">
-      <h3 class="panel-title">Search for a book</h3>
-
-      <form id="search-form" class="search-form">
+      <form id="search-form" class="home-search-form">
         <input
           id="search-input"
           type="text"
-          placeholder="Try &quot;cozy fantasy&quot; or &quot;Emily Henry&quot;..."
+          placeholder="Search by title, author, or genre..."
           required
         />
         <button type="submit">Search</button>
       </form>
-
-      <div id="results"></div>
     </section>
+
+   <section class="recommended-section">
+  <h3 class="recommended-title">Recommended</h3>
+
+  <div class="recommended-wrapper">
+    <div id="results" class="recommended-row"></div>
+    <div class="home-shelf-plank"></div>
+  </div>
+</section>
+
   </main>
 
   <script src="search.js"></script>

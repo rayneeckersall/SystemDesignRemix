@@ -68,6 +68,39 @@ body {
   color: white;
 }
 
+.header-brand .brand-link {
+  text-decoration: none;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.header-brand .brand-link:hover {
+  opacity: 0.8;
+}
+
+/* Remove tab-style nav-links since we only use 1 pill button now */
+.header-nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-pill {
+  background: var(--accent);
+  color: white;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.nav-pill:hover {
+  box-shadow: 0 8px 20px rgba(94, 59, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+
 /* ---------- Generic layout ---------- */
 
 main {
@@ -79,10 +112,187 @@ main {
 /* ---------- Home / Search layout ---------- */
 
 .home-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.4fr);
-  gap: 3rem;
-  align-items: flex-start;
+  max-width: 960px;
+  margin: 2.5rem auto 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2.5rem;
+}
+.home-hero {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.home-title {
+  margin: 0;
+  font-size: 1.9rem;
+  letter-spacing: -0.02em;
+}
+
+.home-search-form {
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  justify-content: center;
+}
+
+/* pill look */
+.home-search-form #search-input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #f2f0fa;
+  outline: none;
+}
+
+.home-search-form #search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+
+.recommended-section {
+  width: 100%;
+  max-width: 960px;
+  text-align: left;
+}
+
+.recommended-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.recommended-wrapper {
+  position: relative;
+  padding-bottom: 2.2rem;
+}
+
+.recommended-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  overflow-x: auto;
+  padding: 0 0.25rem 1.6rem;
+}
+
+/* Mini bookshelf plank under the row */
+.home-shelf-plank {
+  position: absolute;
+  bottom: 0;
+  left: -4%;
+  right: -4%;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c79a6c, #b67c4b, #c79a6c);
+  box-shadow:
+    0 10px 24px rgba(63, 31, 7, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  z-index: -1;
+}
+
+/* ----- Book tiles on the homepage shelf ----- */
+
+.book-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.book-cover-wrapper {
+  position: relative;
+  width: 120px;
+  height: 180px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f0ecff;
+  box-shadow: 0 10px 22px rgba(36, 25, 86, 0.22);
+  flex-shrink: 0;
+}
+
+.book-cover-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.book-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-main);
+  max-width: 120px;
+  text-align: center;
+}
+
+/* "+" button on the bottom-right of each cover */
+
+.book-plus {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 0;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(94, 59, 255, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.book-plus:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(94, 59, 255, 0.65);
+}
+
+/* Small popup menu */
+
+.book-menu {
+  position: absolute;
+  right: 6px;
+  bottom: 38px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 14px 30px rgba(22, 12, 65, 0.35);
+  padding: 0.3rem 0;
+  min-width: 90px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.book-menu.hidden {
+  display: none;
+}
+
+.book-menu button {
+  border: none;
+  background: transparent;
+  padding: 0.32rem 0.7rem;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+.book-menu button:hover {
+  background: #f2f0fa;
 }
 
 .eyebrow {
