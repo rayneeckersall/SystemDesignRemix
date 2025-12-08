@@ -158,6 +158,8 @@ main {
   box-shadow: 0 0 0 1px var(--accent-soft);
 }
 
+/* Filter Bar */
+
 .filter-bar {
   margin-top: 0.8rem;
   display: flex;
@@ -191,6 +193,30 @@ main {
   border-color: #5f3bff;
 }
 
+.rating-stars {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rating-star {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 0;
+  color: #c4bfdc; /* inactive star */
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.rating-star.active {
+  color: #f5b000; /* gold star */
+  transform: translateY(-1px);
+}
+
+.rating-star:hover {
+  color: #d6a20a;
+}
 
 
 /* Fullscreen overlay for book details */

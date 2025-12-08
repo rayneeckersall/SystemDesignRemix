@@ -5,8 +5,12 @@ const form = document.getElementById("search-form");
 const input = document.getElementById("search-input");
 const resultsDiv = document.getElementById("results");
 const genreSelect = document.getElementById("genre-filter");
-const ratingSelect = document.getElementById("rating-filter");
-const lengthSelect = document.getElementById("length-filter");
+const ratingStars = document.querySelectorAll(".rating-star");
+
+// null = no filter
+let currentRatingFilter = null;
+
+
 
 // cache for book detail responses
 const detailsCache = {};
@@ -24,12 +28,37 @@ window.addEventListener("DOMContentLoaded", () => {
   performSearch();
 });
 
-// re-run search when any filter changes
-[genreSelect, ratingSelect, lengthSelect].forEach((el) => {
-  el.addEventListener("change", () => {
+// re-run search when genre changes
+genreSelect.addEventListener("change", () => {
+  performSearch();
+});
+
+// star rating filter
+ratingStars.forEach((star) => {
+  star.addEventListener("click", () => {
+    const value = Number(star.dataset.rating);
+
+    // If user clicks the same rating → clear filter
+    if (currentRatingFilter === value) {
+      currentRatingFilter = null;
+      ratingStars.forEach((s) => s.classList.remove("active"));
+      performSearch();
+      return;
+    }
+
+    // Otherwise set new filter
+    currentRatingFilter = value;
+
+    // Highlight stars up to selected
+    ratingStars.forEach((s) => {
+      const r = Number(s.dataset.rating);
+      s.classList.toggle("active", r <= currentRatingFilter);
+    });
+
     performSearch();
   });
 });
+
 
 // close all "+" menus when clicking anywhere else
 document.addEventListener("click", () => {
@@ -45,12 +74,13 @@ async function performSearch() {
   const params = new URLSearchParams({ q: baseQuery });
 
   const genre = genreSelect.value;
-  const rating = ratingSelect.value;
-  const length = lengthSelect.value;
 
   if (genre && genre !== "any") params.set("genre", genre);
-  if (rating && rating !== "any") params.set("rating", rating);
-  if (length && length !== "any") params.set("length", length);
+  if (currentRatingFilter != null) {
+  params.set("rating", String(currentRatingFilter));
+}
+
+
 
   resultsDiv.textContent = "Loading...";
 
