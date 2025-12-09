@@ -5,120 +5,120 @@ const axios = require('axios');
 const router = express.Router();
 const BASE_URL = 'https://api.bigbookapi.com';
 
-// aggressively normalize titles so Gatsby doesn't appear 10 times
+// Normalize titles so multiple editions of the same book collapse
 function normalizeTitle(title) {
   return title
     .toLowerCase()
-    .replace(/\([^)]*\)/g, '')        // remove (Edition …)
-    .replace(/[:\-–].*$/g, '')       // remove subtitles
+    .replace(/\([^)]*\)/g, '')     // remove (Edition …) etc.
+    .replace(/[:\-–].*$/g, '')     // remove subtitles after colon/dash
     .replace(/\s+/g, ' ')
     .trim();
 }
 
+// GET /api/search?q=some+query&genre=fantasy (genre is optional)
 router.get('/', async (req, res) => {
   const query = req.query.q;
-  const genre = req.query.genre || 'any';
-  const ratingFilter = req.query.rating || 'any';
-  const lengthFilter = req.query.length || 'any';
+  const genre = req.query.genre || null;
 
   if (!query) {
     return res.status(400).json({ error: 'Missing q query parameter' });
   }
 
+  // how many unique books we want to end up with for the UI
+  const TARGET_COUNT = 12;
+  // how many books to ask BigBook for per request
+  const PAGE_SIZE = 20;
+  // hard limit so we don’t spam the API forever
+  const MAX_REQUESTS = 5;
+
+  const seenTitles = new Set();
+  const collected = [];
+
+  let offset = 0;
+  let available = null;
+  let requestCount = 0;
+
   try {
-    const params = {
-      'api-key': process.env.BIGBOOK_API_KEY,
-      query,
-      number: 40, // get more, we'll filter down
-    };
-
-    if (genre !== 'any') {
-      params.genres = genre; // BigBook supports genres filter
-    }
-
-    const response = await axios.get(`${BASE_URL}/search-books`, { params });
-    const apiData = response.data;
-    const rawBooks = apiData.books || [];
-
-    const deduped = [];
-    const seenKeys = new Set();
-
-    for (const group of rawBooks) {
-      const book = Array.isArray(group) ? group[0] : group;
-      if (!book || !book.title) continue;
-
-      const normTitle = normalizeTitle(book.title);
-      const firstAuthor =
-        book.authors && book.authors.length ? book.authors[0].name : '';
-      const image = book.image || '';
-
-      const key = `${normTitle}|${firstAuthor.toLowerCase().trim()}|${image}`;
-      if (seenKeys.has(key)) continue;
-      seenKeys.add(key);
-
-      deduped.push({
-        bigBookId: book.id,
-        title: book.title,
-        authors: (book.authors || []).map((a) => a.name),
-        coverImageUrl: book.image,
-        averageRating:
-          book.rating && typeof book.rating.average === 'number'
-            ? book.rating.average
-            : null,
-      });
-    }
-
-    // rating filter (client gives “3”, “4.5” stars)
-    let filtered = deduped;
-    if (ratingFilter !== 'any') {
-      const stars = parseFloat(ratingFilter);
-      if (!Number.isNaN(stars)) {
-        const threshold = stars / 5; // BigBook ratings are 0–1
-        filtered = filtered.filter(
-          (b) => b.averageRating === null || b.averageRating >= threshold
-        );
-      }
-    }
-
-    // length filter → we need number_of_pages from Get Book Information
-    if (lengthFilter !== 'any') {
-      const buckets = {
-        short: [0, 250],
-        medium: [251, 400],
-        long: [401, Infinity],
+    while (
+      collected.length < TARGET_COUNT &&
+      requestCount < MAX_REQUESTS &&
+      (available === null || offset < available) &&
+      offset <= 1000 // BigBook docs: offset in [0,1000]
+    ) {
+      const params = {
+        'api-key': process.env.BIGBOOK_API_KEY,
+        query,
+        number: PAGE_SIZE,
+        offset,
       };
-      const [minPages, maxPages] = buckets[lengthFilter] || [0, Infinity];
 
-      const lengthFiltered = [];
-
-      for (const book of filtered) {
-        try {
-          const detailsRes = await axios.get(`${BASE_URL}/${book.bigBookId}`, {
-            params: { 'api-key': process.env.BIGBOOK_API_KEY },
-          });
-
-          const pages = detailsRes.data.number_of_pages;
-          if (!pages) continue;
-          if (pages >= minPages && pages <= maxPages) {
-            lengthFiltered.push(book);
-          }
-        } catch (err) {
-          console.error('Error fetching length details:', err.message);
-        }
-        if (lengthFiltered.length >= 12) break;
+      // If front-end passed a genre, let BigBook help filter a bit
+      if (genre && genre !== 'any') {
+        params.genres = genre;
       }
 
-      filtered = lengthFiltered;
+      const response = await axios.get(`${BASE_URL}/search-books`, { params });
+      const apiData = response.data;
+
+      // BigBook metadata: how many total matches exist for this query
+      if (available === null && typeof apiData.available === 'number') {
+        available = apiData.available;
+      }
+
+      const rawBooks = apiData.books || apiData.data || [];
+
+      // If BigBook returns nothing, stop trying further pages
+      if (!rawBooks.length) {
+        break;
+      }
+
+      for (const item of rawBooks) {
+        const book = Array.isArray(item) ? item[0] : item;
+        if (!book || !book.title) continue;
+
+        const normTitle = normalizeTitle(book.title);
+        if (!normTitle) continue;
+
+        // de-dupe by normalized title so multiple editions collapse
+        if (seenTitles.has(normTitle)) continue;
+        seenTitles.add(normTitle);
+
+        collected.push({
+          bigBookId: book.id,
+          title: book.title,
+          authors: (book.authors || []).map((a) => a.name),
+          coverImageUrl: book.image,
+          // BigBook rating.average is 0–1; we keep that raw
+          averageRating:
+            book.rating && typeof book.rating.average === 'number'
+              ? book.rating.average
+              : null,
+        });
+
+        if (collected.length >= TARGET_COUNT) break;
+      }
+
+      // move to the next “page”
+      const usedNumber =
+        typeof apiData.number === 'number' && apiData.number > 0
+          ? apiData.number
+          : PAGE_SIZE;
+      offset += usedNumber;
+      requestCount += 1;
     }
 
-    // cap to 12 to keep shelf from being huge
-    filtered = filtered.slice(0, 12);
+    // sort highest-rated first so recs feel nice
+    collected.sort((a, b) => {
+      const ar = typeof a.averageRating === 'number' ? a.averageRating : 0;
+      const br = typeof b.averageRating === 'number' ? b.averageRating : 0;
+      return br - ar;
+    });
 
     console.log(
-      `🔍 Search "${query}" genre=${genre}, rating=${ratingFilter}, length=${lengthFilter} → ${filtered.length} results`
+      `🔍 Search "${query}" genre=${genre || 'none'} → sending ${collected.length} books (requests=${requestCount}, available=${available})`
     );
 
-    res.json(filtered);
+    res.json(collected);
   } catch (err) {
     console.error(
       'Error calling BigBook API:',

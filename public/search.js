@@ -7,10 +7,8 @@ const resultsDiv = document.getElementById("results");
 const genreSelect = document.getElementById("genre-filter");
 const ratingStars = document.querySelectorAll(".rating-star");
 
-// null = no filter
+// null = no star filter active
 let currentRatingFilter = null;
-
-
 
 // cache for book detail responses
 const detailsCache = {};
@@ -29,16 +27,18 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // re-run search when genre changes
-genreSelect.addEventListener("change", () => {
-  performSearch();
-});
+if (genreSelect) {
+  genreSelect.addEventListener("change", () => {
+    performSearch();
+  });
+}
 
-// star rating filter
+// star rating filter (1–4 stars, click again to clear)
 ratingStars.forEach((star) => {
   star.addEventListener("click", () => {
-    const value = Number(star.dataset.rating);
+    const value = Number(star.dataset.rating); // 1–4
 
-    // If user clicks the same rating → clear filter
+    // If clicking same star → clear filter
     if (currentRatingFilter === value) {
       currentRatingFilter = null;
       ratingStars.forEach((s) => s.classList.remove("active"));
@@ -59,7 +59,6 @@ ratingStars.forEach((star) => {
   });
 });
 
-
 // close all "+" menus when clicking anywhere else
 document.addEventListener("click", () => {
   document
@@ -73,36 +72,67 @@ async function performSearch() {
   const baseQuery = input.value.trim() || "books";
   const params = new URLSearchParams({ q: baseQuery });
 
-  const genre = genreSelect.value;
+  const genre = genreSelect ? genreSelect.value : null;
 
+  // Only send genre to backend; we do rating filtering on the frontend
   if (genre && genre !== "any") params.set("genre", genre);
-  if (currentRatingFilter != null) {
-  params.set("rating", String(currentRatingFilter));
-}
-
-
 
   resultsDiv.textContent = "Loading...";
 
   try {
     const res = await fetch(`/api/search?${params.toString()}`);
-    const books = await res.json();
+    let books = await res.json(); // NOTE: let so we can reassign
 
     resultsDiv.innerHTML = "";
 
-    if (!books.length) {
-      resultsDiv.textContent = "No results.";
+    // If no star filter is active, just show everything
+    if (currentRatingFilter == null) {
+      if (!books.length) {
+        resultsDiv.textContent = "No results.";
+        return;
+      }
+      books.forEach((book) => renderBookTile(book));
       return;
     }
 
-    books.forEach((book) => {
-      renderBookTile(book);
-    });
+    // --- Star filter: split results into 5 buckets based on rating ---
+
+    // Separate rated vs N/A (we hide N/A when filtering by stars)
+    const rated = books.filter(
+      (b) => typeof b.averageRating === "number"
+    );
+
+    if (!rated.length) {
+      resultsDiv.textContent = "No rated books found for this search.";
+      return;
+    }
+
+    // Sort rated books from lowest to highest rating (0–1 scale)
+    rated.sort((a, b) => a.averageRating - b.averageRating);
+
+    // Split into 5 roughly equal buckets
+    const bucketCount = 5;
+    const bucketSize = Math.ceil(rated.length / bucketCount);
+
+    // currentRatingFilter is 1–5
+    const bucketIndex = currentRatingFilter - 1; // 0–4
+    const start = bucketIndex * bucketSize;
+    const end = start + bucketSize;
+
+    const bucketBooks = rated.slice(start, end);
+
+    if (!bucketBooks.length) {
+      resultsDiv.textContent = "No results for this rating range.";
+      return;
+    }
+
+    bucketBooks.forEach((book) => renderBookTile(book));
   } catch (err) {
     console.error("Error in performSearch:", err);
     resultsDiv.textContent = "Error loading search results.";
   }
 }
+
 
 // --- Tile + menus ---
 
@@ -331,13 +361,13 @@ async function showInfoCard(book) {
 
   overlay.appendChild(card);
 
+  // click outside the card closes overlay
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) overlay.remove();
   });
 
   document.body.appendChild(overlay);
 }
-
 
 // --- Add to shelf ---
 
