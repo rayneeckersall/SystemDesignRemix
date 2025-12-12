@@ -23,8 +23,15 @@ form.addEventListener("submit", async (e) => {
 
 // default recommended search on first load
 window.addEventListener("DOMContentLoaded", () => {
+  // blank search = general recommendations
+  input.value = "";
+
+  // new seed every refresh → new results
+  window.__recoSeed = Date.now().toString();
+
   performSearch();
 });
+
 
 // re-run search when genre changes
 if (genreSelect) {
@@ -32,6 +39,36 @@ if (genreSelect) {
     performSearch();
   });
 }
+
+function showToast({ title, message = "", type = "success", timeout = 2200 }) {
+  const root = document.getElementById("toast-root");
+  if (!root) return;
+
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+
+  toast.innerHTML = `
+    <div class="toast-icon">${type === "error" ? "!" : "✓"}</div>
+    <div>
+      <p class="toast-title">${title}</p>
+      ${message ? `<p class="toast-msg">${message}</p>` : ""}
+    </div>
+    <button class="toast-close" aria-label="Close">×</button>
+  `;
+
+  const remove = () => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+    setTimeout(() => toast.remove(), 180);
+  };
+
+  toast.querySelector(".toast-close").addEventListener("click", remove);
+  root.appendChild(toast);
+
+  if (timeout) setTimeout(remove, timeout);
+}
+
+
 
 // star rating filter (1–4 stars, click again to clear)
 ratingStars.forEach((star) => {
@@ -71,6 +108,12 @@ document.addEventListener("click", () => {
 async function performSearch() {
   const baseQuery = input.value.trim() || "books";
   const params = new URLSearchParams({ q: baseQuery });
+
+  // always bust cache + randomize server paging
+params.set("seed", String(Date.now()));
+
+  if (window.__recoSeed) params.set("seed", window.__recoSeed);
+
 
   const genre = genreSelect ? genreSelect.value : null;
 
@@ -373,14 +416,41 @@ async function showInfoCard(book) {
 
 async function addBookToShelf(bigBookId, status) {
   try {
-    await fetch("/api/books", {
+    const res = await fetch("/api/books", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bigBookId, status }),
     });
-    alert(`Added to ${status}`);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Failed to save book.");
+    }
+
+    showToast({
+      title: "Added to your shelves",
+      message: `Saved to ${status}.`,
+      type: "success",
+    });
   } catch (err) {
-    console.error("Error in addBookToShelf:", err);
-    alert("Error adding book.");
+    console.error(err);
+    showToast({
+      title: "Couldn’t save that book",
+      message: err.message || "Please try again.",
+      type: "error",
+      timeout: 3000,
+    });
   }
 }
+
+
+let baseQuery = input.value.trim() || "books";
+const genre = genreSelect.value;
+
+if (genre && genre !== "any") {
+  baseQuery = `${baseQuery} ${genre}`;
+}
+
+const params = new URLSearchParams({ q: baseQuery });
+if (genre && genre !== "any") params.set("genre", genre);
+

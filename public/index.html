@@ -14,14 +14,14 @@
 
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
 <body>
   <header class="app-header">
     <div class="header-brand">
     <a href="index.html" class="brand-link">Book Tracker</a>
     </div>
     <nav class="header-nav">
-      <a href="library.html" class="nav-link active">My Library</a>
+<a class="nav-link" href="/library.html">My Library</a>
     </nav>
   </header>
 
@@ -42,29 +42,28 @@
 
       <!-- Filters row -->
 <div class="filter-bar">
-  <div class="filter-group">
-    <label for="genre-filter">Genre</label>
-    <select id="genre-filter">
+  <div class="filter-item">
+    <label class="filter-label">Genre</label>
+    <select id="genre-filter" class="genre-select">
       <option value="any">Any</option>
       <option value="fantasy">Fantasy</option>
       <option value="romance">Romance</option>
       <option value="mystery">Mystery</option>
-      <option value="science_fiction">Sci-Fi</option>
-      <option value="young_adult">Young Adult</option>
-      <option value="nonfiction">Non-fiction</option>
     </select>
   </div>
 
-<div class="filter-group">
-  <label>Rating</label>
-  <div class="rating-stars" id="rating-stars">
-    <button type="button" class="rating-star" data-rating="1">★</button>
-    <button type="button" class="rating-star" data-rating="2">★</button>
-    <button type="button" class="rating-star" data-rating="3">★</button>
-    <button type="button" class="rating-star" data-rating="4">★</button>
-    <button type="button" class="rating-star" data-rating="5">★</button>
+  <div class="filter-item">
+    <label class="filter-label">Rating</label>
+    <div class="rating-stars" id="rating-filter">
+      <button class="rating-star" data-rating="1">★</button>
+      <button class="rating-star" data-rating="2">★</button>
+      <button class="rating-star" data-rating="3">★</button>
+      <button class="rating-star" data-rating="4">★</button>
+      <button class="rating-star" data-rating="5">★</button>
+    </div>
   </div>
 </div>
+
 
 
     </section>
